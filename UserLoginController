@@ -1,0 +1,90 @@
+package com.anudip.TrainTicketReservationSystemProject.controller;
+
+import com.anudip.TrainTicketReservationSystemProject.entity.UserLogin;
+import com.anudip.TrainTicketReservationSystemProject.Exception.UserFoundException;
+import com.anudip.TrainTicketReservationSystemProject.Exception.UserNotFoundException;
+import com.anudip.TrainTicketReservationSystemProject.service.UserLoginService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@CrossOrigin
+
+
+@RestController
+@RequestMapping("/userlogin")
+public class UserLoginController {
+
+    @Autowired
+    private UserLoginService userLoginService;
+
+    @GetMapping("/all")
+    public ResponseEntity<List<UserLogin>> getAllUserLogins() {
+        try {
+            List<UserLogin> userLogins = userLoginService.getAllRecords();
+            return new ResponseEntity<>(userLogins, HttpStatus.OK);
+        } catch (UserNotFoundException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @GetMapping("/{email}")
+    public ResponseEntity<?> getUserLogin(@PathVariable String email) {
+        try {
+            UserLogin userLogin = userLoginService.getUserLogin(email);
+            return new ResponseEntity<>(userLogin, HttpStatus.OK);
+        } catch (UserNotFoundException e) {
+            // Handle the exception and return a custom message
+            String errorMessage = "No user found with email: " + email;
+            return new ResponseEntity<>(errorMessage, HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<String> saveUserLogin(@RequestBody UserLogin userLogin) {
+        try {
+            userLoginService.saveUserLogin(userLogin);
+            return new ResponseEntity<>("User logged in successfully", HttpStatus.CREATED);
+        } catch (UserNotFoundException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (UserFoundException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
+        } catch (Exception e) {
+            return new ResponseEntity<>("An error occurred while saving the user login", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    
+    
+    
+    /*
+    
+    @PutMapping("/update")
+    public ResponseEntity<String> updateUserLogin(@RequestBody UserLogin userLogin) {
+        try {
+            String result = userLoginService.updateUserLogin(userLogin);
+            return new ResponseEntity<>(result, HttpStatus.OK);
+        } catch (UserNotFoundException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }
+    }*/
+    
+    
+    @PutMapping("/update/{email}")
+    public String updateUserByEmail(@PathVariable String email, @RequestBody UserLogin updatedUser) {
+        return userLoginService.updateUserByEmail(email, updatedUser);
+    }
+    
+    
+    @DeleteMapping("/delete/{email}")
+    public ResponseEntity<String> deleteUserLogin(@PathVariable String email) {
+        try {
+            String result = userLoginService.deleteUserLogin(email);
+            return new ResponseEntity<>(result, HttpStatus.OK);
+        } catch (UserNotFoundException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }
+    }
+}
