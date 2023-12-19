@@ -1,0 +1,82 @@
+package com.anudip.TrainTicketReservationSystemProject.controller;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import com.anudip.TrainTicketReservationSystemProject.Exception.UserFoundException;
+import com.anudip.TrainTicketReservationSystemProject.Exception.UserNotFoundException;
+import com.anudip.TrainTicketReservationSystemProject.entity.User;
+import com.anudip.TrainTicketReservationSystemProject.serviceimpl.UserServiceImpl;
+
+@CrossOrigin(origins = "http://localhost:4200")
+
+
+@RestController  
+@RequestMapping("/users") 
+public class UserController {
+	
+	@Autowired
+    UserServiceImpl userserviceimpl;	
+
+	@GetMapping  
+	public ResponseEntity<List<User>>getAllUser() throws UserNotFoundException
+	{
+		List<User> newuser = userserviceimpl.getAllRecords();
+		return new ResponseEntity<>(newuser,HttpStatus.OK);
+	}
+	
+	@PostMapping  
+	public ResponseEntity<?> addUser(@RequestBody User user) throws UserFoundException {
+        try {
+            User newUser = userserviceimpl.saveUser(user);
+            return new ResponseEntity<>(newUser, HttpStatus.CREATED);
+        } 
+        catch (DataIntegrityViolationException e) {
+            throw new UserFoundException("User already exists: " + e.getMessage());
+        }
+    }
+	
+	@GetMapping("/User/{id}")   
+	public ResponseEntity<User> getUserByid(@PathVariable Long id) throws UserNotFoundException{
+
+		User user = userserviceimpl.getUser(id);
+		return new ResponseEntity<>(user,HttpStatus.OK);
+
+	}
+	
+	@PutMapping("/User/{id}")  
+	public ResponseEntity<User> updateUser(@PathVariable Long id,@RequestBody User user) throws UserNotFoundException{
+		User updateuser = new User();
+		updateuser.setId(id);
+		updateuser.setPassword(user.getPassword());
+		User updateusernew=userserviceimpl.updateUser(user);
+		return new ResponseEntity<>(updateusernew,HttpStatus.OK);
+
+	}
+	
+	@DeleteMapping("/User/{id}")
+	public String deleteTrain(@PathVariable Long id) throws UserNotFoundException
+	{
+		return userserviceimpl.deleteUser(id);
+	}
+	@GetMapping("/User/email/{email}")
+	public ResponseEntity<?> getUserByEmail(@PathVariable String email) {
+	    try {
+	        User user = userserviceimpl.getUserByEmail(email);
+	        return new ResponseEntity<>(user, HttpStatus.OK);
+	    } catch (UserNotFoundException e) {
+	        String errorMessage = "User not found with email: " + email;
+	        return new ResponseEntity<>(errorMessage, HttpStatus.NOT_FOUND);
+	    }
+	}
+}
